@@ -1,0 +1,13 @@
+{
+	"name": "eora",
+	"version": "1.0.0",
+	"description": "a nodejs 'shell'",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js"
+	},
+	"dependencies": {
+		"chalk": "^4.1.0",
+		"chalk-rainbow": "^1.0.0"
+	}
+}
