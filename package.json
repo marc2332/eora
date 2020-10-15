@@ -4,10 +4,19 @@
 	"description": "a nodejs 'shell'",
 	"main": "index.js",
 	"scripts": {
-		"start": "node index.js"
+		"start": "npm run build && node ./dist/index.js",
+		"build":"parcel build index.js --target node",
+		"package": "npm run build && pkg ./dist/index.js --out-path build"
 	},
 	"dependencies": {
 		"chalk": "^4.1.0",
 		"chalk-rainbow": "^1.0.0"
+	},
+	"devDependencies": {
+		"parcel": "^1.12.4",
+		"pkg": "^4.4.9"
+	},
+	"pkg": {
+		"scripts": "theme.js"
 	}
 }

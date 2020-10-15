@@ -2,7 +2,8 @@ let pwd = process.cwd()
 const fs = require('fs')
 const path = require('path')
 const cp = require('child_process')
-
+import theme from './theme'
+import 'regenerator-runtime/runtime'
 
 let leave = false
 let shellFocused = true
@@ -56,8 +57,12 @@ const executeCommand = async ({ cmd, args}) => {
 			default:
 				args = cleanArgs(args)
 				
-				const paths = process.env.Path.split(';')
-				
+				if(process.platform === 'win32'){
+					var paths = process.env.Path.split(';')
+				}else{
+					var paths = process.env.PATH.split(';')
+				}
+			
 				const bin = await new Promise((res) => {
 					paths.forEach((dir) => {
 						let bin = path.join(dir, cmd)
@@ -80,7 +85,7 @@ const executeCommand = async ({ cmd, args}) => {
 				})
 
 				if(bin.includes('.cmd')){
-					var ps = cp.exec(`"${bin.replace(/\\/gm,'/')}" ${args.join('')}`,{
+					var ps = cp.exec(`"${bin.replace(/\\/gm,'/')}" ${args.join(' ')}`,{
 						detached: true,
 						cwd: pwd
 					});
@@ -90,8 +95,6 @@ const executeCommand = async ({ cmd, args}) => {
 						cwd: pwd
 					});
 				}
-
-
 
 				ps.on('close', (code) => {
 					process.stdin.removeListener('data', writingListener)
@@ -124,7 +127,6 @@ const executeCommand = async ({ cmd, args}) => {
 	})
 }
 
-
 process.stdin.on('data', async input  => {
 	if(!shellFocused) return
 	const command = parseComand(input.toString().split(' '))
@@ -133,11 +135,9 @@ process.stdin.on('data', async input  => {
 	showPrompt()
 })
 
-const theme = require('./theme')
 
 const showPrompt = async () => {
 	out(await theme.prompt(pwd))
 }
 
 showPrompt()
-

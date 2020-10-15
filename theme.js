@@ -23,7 +23,7 @@ const npmPackage = pwd => {
 			if(err){
 				res(false)
 			}else{
-				res(require(pkg))
+				res(false)
 			}
 		})
 	})
