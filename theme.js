@@ -5,8 +5,12 @@ const fs = require('fs')
 
 module.exports = {
 	prompt: async (pwd) => {
-		let string = `\n[${chalkRainbow(process.env.USERNAME)}] (${pwd})`
-		
+		if(process.platform === 'win32'){
+			var string = `\n[${chalkRainbow(process.env.USERNAME)}] (${pwd})`;
+		}else{
+			var string = `\n[${chalkRainbow(process.env.USER)}] (${pwd})`;
+		}
+
 		const npm = await npmPackage(pwd)
 		if(npm){
 			string = string.concat(chalk.green(` npm v${npm.version}`))

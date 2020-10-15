@@ -4,4 +4,4 @@ Install dependencies:
 `npm install`
 
 Run:
-`node index.js`
+`npm start`

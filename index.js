@@ -24,8 +24,6 @@ const out = text => process.stdout.write(text);
 
 const cleanArgs = args => args.map(a => a.replace(/(\r\n|\n|\r)/gm,''))
 
-const getPathBins = process.env.Path.split(';')
-
 const executeCommand = async ({ cmd, args}) => {
 	return new Promise(async (res) => {
 		shellFocused = false
