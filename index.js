@@ -39,7 +39,6 @@ const executeCommand = async ({ cmd, args}) => {
 			case 'cd':
 				args = cleanArgs(args)
 				pwd = path.join(pwd, ...args)
-				eventEmitter.emit('pwdChanged', pwd)
 				res()
 				break;
 			case 'clear':
