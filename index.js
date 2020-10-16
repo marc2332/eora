@@ -1,9 +1,10 @@
 let pwd = process.cwd()
-const fs = require('fs')
-const path = require('path')
-const cp = require('child_process')
-import theme from './theme'
-import 'regenerator-runtime/runtime'
+import chalk from 'chalk'
+import chalkRainbow from 'chalk-rainbow'
+import path from 'path'
+import fs from 'fs'
+import cp from'child_process'
+import * as theme from './theme'
 
 let leave = false
 let shellFocused = true
@@ -38,6 +39,7 @@ const executeCommand = async ({ cmd, args}) => {
 			case 'cd':
 				args = cleanArgs(args)
 				pwd = path.join(pwd, ...args)
+				eventEmitter.emit('pwdChanged', pwd)
 				res()
 				break;
 			case 'clear':
@@ -82,6 +84,8 @@ const executeCommand = async ({ cmd, args}) => {
 					},100)
 				})
 
+				if(!bin) return  res()//Any command
+				
 				if(bin.includes('.cmd')){
 					var ps = cp.exec(`"${bin.replace(/\\/gm,'/')}" ${args.join(' ')}`,{
 						detached: true,
@@ -133,6 +137,10 @@ process.stdin.on('data', async input  => {
 	showPrompt()
 })
 
+process.on('SIGINT', function() {
+	out(chalk.blue('\n bye ! '))
+	process.exit(0)
+})
 
 const showPrompt = async () => {
 	out(await theme.prompt(pwd))

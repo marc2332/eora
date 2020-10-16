@@ -1,3 +1,5 @@
+## Eora
+
 This is a 'shell' made in NodeJS.
 
 Install dependencies:
@@ -5,3 +7,6 @@ Install dependencies:
 
 Run:
 `npm start`
+
+Making a binary (optional):
+`npm run package`

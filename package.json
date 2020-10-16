@@ -1,11 +1,11 @@
 {
 	"name": "eora",
 	"version": "1.0.0",
-	"description": "a nodejs 'shell'",
+	"description": "A nodejs 'shell'",
 	"main": "index.js",
 	"scripts": {
 		"start": "npm run build && node ./dist/index.js",
-		"build":"parcel build index.js --target node",
+		"build": "webpack",
 		"package": "npm run build && pkg ./dist/index.js --out-path build"
 	},
 	"dependencies": {
@@ -13,10 +13,10 @@
 		"chalk-rainbow": "^1.0.0"
 	},
 	"devDependencies": {
-		"parcel": "^1.12.4",
-		"pkg": "^4.4.9"
-	},
-	"pkg": {
-		"scripts": "theme.js"
+		"pkg": "^4.4.9",
+		"webpack": "^4.44.2",
+		"webpack-cli": "^4.0.0",
+		"babel": "^6.23.0",
+		"babel-loader": "^8.1.0"
 	}
 }
