@@ -6,6 +6,7 @@ import fs from 'fs-extra'
 import cp from'child_process'
 import * as theme from './theme'
 import keypress from 'keypress'
+import cursorfrom from 'term-cursor'
 
 let leave = false
 let shellFocused = true
@@ -163,28 +164,29 @@ process.stdin.on('keypress', async function (data, key = { name: 'unknown'}) {
 	}else if(key.name === 'backspace'){ //delete
 		if(!shellFocused) return
 		pastMessage = pastMessage.slice(0, -1)
-		process.stdout.clearLine()
 		await cleanLineAndReRender()
-		handleCorretions(data)
-		const cursor = require('term-cursor')
-		cursor.right(1)
+		
+		const { goal, completed } = getBestAutocompletion(pastMessage)
+		
+		if(goal){
+			promptPrint(green(pastMessage))
+			if(!completed) showRight(pastMessage, goal)
+		}else {
+			promptPrint(chalk.red(pastMessage))
+		}
 	
 	}else if(key.name === 'tab'){ //tab
-		pastMessage = autoCompletingNow
-		
-		process.stdout.clearLine(-1);  // clear current text
+		process.stdout.clearLine(-1)  // clear current text
 	
-		const cursor = require('term-cursor')
 		cursor.up(1)
 		
 		const str = await getPrompt()
 		promptPrint(`${str}${pastMessage}`);
 	}else{
 		pastMessage = pastMessage.concat(input)
-		
 		handleCorretions(data)
 	}
-});
+})
 
 async function resetPrompt(){
 	pastMessage = ''
@@ -195,36 +197,36 @@ async function resetPrompt(){
 
 async function handleCorretions(data){
 	if(!data) return
+	await cleanLineAndReRender()
 	
-	const goal = getBestAutocompletion(pastMessage)
-
+	const { goal, completed } = getBestAutocompletion(pastMessage)
+	
 	if(goal){
-		promptPrint(green(data))
-		let [_,left] = goal.split(data)
-		if(!left) return
-		promptPrint(chalk.gray(left))
-		const cursor = require('term-cursor')
-		cursor.left(left.length)
-		autoCompletingNow = goal
+		promptPrint(green(pastMessage))
+		if(!completed) showRight(data, goal)
 	}else{
-		let tmp = pastMessage
-		pastMessage = ''
-		await cleanLineAndReRender()
-		pastMessage = tmp
-		promptPrint(chalk.red(tmp))
-		pastMessageColorizer = red
+		promptPrint(chalk.red(pastMessage))
 	}
+}
+
+function showRight(data, goal){
+	let [_,left] = goal.split(data)
+	if(!left) return
+	promptPrint(chalk.gray(left))
+	const cursor = require('term-cursor')
+	cursor.left(left.length)
+	autoCompletingNow = goal
 }
 
 function cleanLineAndReRender(){
 	return new Promise( async (res) => {
-		process.stdout.clearLine(-1);  // clear current text
+		process.stdout.clearLine(0)  // clear current text
 
 		const cursor = require('term-cursor')
 		cursor.up(1)
 
 		const str = await getPrompt()
-		promptPrint(`${str}${pastMessageColorizer(pastMessage)}`);
+		promptPrint(`${str}`);
 		res()
 	})
 }
@@ -248,11 +250,20 @@ const getPrompt = () => {
 
 getPrompt().then(a => out(a))
 
-const getBestAutocompletion = (text) => {
+const getBestAutocompletion = text => {
+	if(text === '') return {}
 	const command = parseComand(text.split(' '))
-	return autocompletions.find(t => {
-		if(t.startsWith(command.cmd)) return t
+	let res = {}
+	autocompletions.find(t => {
+		if(t.startsWith(command.cmd) && res.goal === undefined)  {
+			res = {
+				goal: t,
+				completed: command.args.length > 0
+			}
+			return t
+		}
 	})
+	return res
 }
 
 let autocompletions = [
@@ -266,7 +277,7 @@ let autocompletions = [
 
 
 if(process.platform === 'win32'){
-	var paths = process.env.Path.split(';').map(p => {
+	process.env.Path.split(';').map(p => {
 		fs.readdir(p).then(list => {
 			list.map(b => {
 				autocompletions.push(b)
@@ -275,10 +286,9 @@ if(process.platform === 'win32'){
 		return path.basename(p)
 	})
 }else{
-	var paths = process.env.PATH.split(';').map(p => {
+	autocompletions = [...process.env.PATH.split(';').map(p => {
 		return path.basename(p)
-	})
-	autocompletions = autocompletions.concat(paths)
+	}).filter(Boolean)]
 }
 
 

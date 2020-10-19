@@ -1,6 +1,6 @@
 {
 	"name": "eora",
-	"version": "1.0.0",
+	"version": "1.0.12",
 	"description": "A nodejs 'shell'",
 	"main": "index.js",
 	"scripts": {
