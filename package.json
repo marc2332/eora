@@ -10,7 +10,11 @@
 	},
 	"dependencies": {
 		"chalk": "^4.1.0",
-		"chalk-rainbow": "^1.0.0"
+		"chalk-rainbow": "^1.0.0",
+		"commander": "^6.1.0",
+		"fs-extra": "^9.0.1",
+		"keypress": "^0.2.1",
+		"term-cursor": "^1.0.2"
 	},
 	"devDependencies": {
 		"pkg": "^4.4.9",
