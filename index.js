@@ -1,4 +1,4 @@
-let pwd = process.cwd()
+let cwd = process.cwd()
 import chalk from 'chalk'
 import chalkRainbow from 'chalk-rainbow'
 import path from 'path'
@@ -6,7 +6,7 @@ import fs from 'fs-extra'
 import cp from'child_process'
 import * as theme from './theme'
 import keypress from 'keypress'
-import cursorfrom from 'term-cursor'
+import termCursor from 'term-cursor'
 
 let leave = false
 let shellFocused = true
@@ -39,7 +39,7 @@ const executeCommand = async ({ cmd, args}) => {
 		shellFocused = false
 		switch(cmd){
 			case 'ls':
-				fs.readdir(pwd,(err, list) => {
+				fs.readdir(cwd,(err, list) => {
 					if(err) out(err)
 					out(list.join('\n'))
 					res()
@@ -47,7 +47,7 @@ const executeCommand = async ({ cmd, args}) => {
 				break;
 			case 'cd':
 				args = cleanArgs(args)
-				pwd = path.join(pwd, ...args)
+				cwd = path.join(cwd, ...args)
 				res()
 				break;
 			case 'clear':
@@ -59,7 +59,7 @@ const executeCommand = async ({ cmd, args}) => {
 				res()
 				break;
 			case 'pwd':
-				out(pwd)
+				out(cwd)
 				res()
 				break;
 			case 'exit':
@@ -83,10 +83,8 @@ const executeCommand = async ({ cmd, args}) => {
 						}else{
 							bin = bin.concat('.sh')
 						}
-						fs.lstat(bin, (err) => {
-							if(err){
-								//
-							}else{
+						fs.lstat(bin, err => {
+							if(!err){
 								res(bin)
 							}
 						})
@@ -96,18 +94,17 @@ const executeCommand = async ({ cmd, args}) => {
 					},100)
 				})
 
-				if(!bin) return  res()//Any command
-				
+				if(!bin) return  res() //Any command
+				console.log(bin)
 				if(bin.includes('.cmd')){
-					var ps = cp.exec(`"${bin.replace(/\\/gm,'/')}" ${args.join(' ')}`,{
+					var ps = cp.exec(`"${bin.replace(/\\/gm,'/')}" ${args.join(' ')}`, {
 						detached: true,
-						cwd: pwd
-					});
+						cwd
+					})
 				}else{
 					var ps = cp.spawn(bin,args,{
-						detached: true,
-						cwd: pwd
-					});
+						cwd
+					})
 				}
 
 				ps.on('close', (code) => {
@@ -150,6 +147,10 @@ let pastMessageColorizer = empty
 process.stdin.on('keypress', async function (data, key = { name: 'unknown'}) {
 	const input = data.toString()
 	
+	if(!shellFocused && !key.ctrl){
+		return
+	}
+	
 	if(key.name === 'c' && key.ctrl){ //enter
 		out(chalk.pink('Cancelling...'))
 		resetPrompt()
@@ -178,11 +179,11 @@ process.stdin.on('keypress', async function (data, key = { name: 'unknown'}) {
 	}else if(key.name === 'tab'){ //tab
 		process.stdout.clearLine(-1)  // clear current text
 	
-		cursor.up(1)
+		termCursor.up(1)
 		
 		const str = await getPrompt()
 		promptPrint(`${str}${pastMessage}`);
-	}else{
+	}else if(!key.ctrl){ //any other key
 		pastMessage = pastMessage.concat(input)
 		handleCorretions(data)
 	}
@@ -213,8 +214,7 @@ function showRight(data, goal){
 	let [_,left] = goal.split(data)
 	if(!left) return
 	promptPrint(chalk.gray(left))
-	const cursor = require('term-cursor')
-	cursor.left(left.length)
+	termCursor.left(left.length)
 	autoCompletingNow = goal
 }
 
@@ -222,8 +222,7 @@ function cleanLineAndReRender(){
 	return new Promise( async (res) => {
 		process.stdout.clearLine(0)  // clear current text
 
-		const cursor = require('term-cursor')
-		cursor.up(1)
+		termCursor.up(1)
 
 		const str = await getPrompt()
 		promptPrint(`${str}`);
@@ -243,7 +242,7 @@ process.on('SIGINT', function() {
 
 const getPrompt = () => {
 	return new Promise(async (res) => {
-		let prompt = await theme.prompt(pwd)
+		let prompt = await theme.prompt(cwd)
 		res(prompt)
 	})
 }
