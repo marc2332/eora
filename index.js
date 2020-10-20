@@ -95,7 +95,7 @@ const executeCommand = async ({ cmd, args}) => {
 				})
 
 				if(!bin) return  res() //Any command
-				console.log(bin)
+
 				if(bin.includes('.cmd')){
 					var ps = cp.exec(`"${bin.replace(/\\/gm,'/')}" ${args.join(' ')}`, {
 						detached: true,
@@ -177,12 +177,13 @@ process.stdin.on('keypress', async function (data, key = { name: 'unknown'}) {
 		}
 	
 	}else if(key.name === 'tab'){ //tab
-		process.stdout.clearLine(-1)  // clear current text
-	
-		termCursor.up(1)
-		
-		const str = await getPrompt()
-		promptPrint(`${str}${pastMessage}`);
+		await cleanLineAndReRender()
+		const { goal, completed } = getBestAutocompletion(pastMessage)
+
+		if(goal && !completed){
+			promptPrint(green(goal))
+			pastMessage = goal
+		}
 	}else if(!key.ctrl){ //any other key
 		pastMessage = pastMessage.concat(input)
 		handleCorretions(data)

@@ -25,8 +25,10 @@ const npmPackage = pwd => {
 			if(err){
 				res(false)
 			}else{
-				res(false)
+				res(req(pkg))
 			}
 		})
 	})
 }
+
+const req = (w) => eval(`require("${w.replace(/\\/gm,'/')}")`) 
