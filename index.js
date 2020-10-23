@@ -280,7 +280,7 @@ if(process.platform === 'win32'){
 	process.env.Path.split(';').map(p => {
 		fs.readdir(p).then(list => {
 			list.map(b => {
-				autocompletions.push(b)
+				autocompletions.push(b.replace(/(.exe)|(.cmd)/gm, ''))
 			})
 		})
 		return path.basename(p)
