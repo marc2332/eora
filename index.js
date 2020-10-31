@@ -47,8 +47,15 @@ const executeCommand = async ({ cmd, args}) => {
 				break;
 			case 'cd':
 				args = cleanArgs(args)
-				cwd = path.join(cwd, ...args)
-				res()
+				fs.lstat(path.join(cwd, ...args),(err) => {
+					if(err) {
+						out(`Directory <${args}> doesn't exist.`)
+					} else {
+						cwd = path.join(cwd, ...args)
+					}
+					res()
+				})
+
 				break;
 			case 'clear':
 				console.clear()
@@ -145,13 +152,18 @@ let autoCompletingNow = ''
 let pastMessageColorizer = empty
 
 process.stdin.on('keypress', async function (data, key = { name: 'unknown'}) {
+	if(!data){
+		out(`Error: Unhandled key press.`)
+		resetPrompt()
+		return
+	}
 	const input = data.toString()
 	
 	if(!shellFocused && !key.ctrl){
 		return
 	}
 	
-	if(key.name === 'c' && key.ctrl){ //enter
+	if(key.name === 'c' && key.ctrl){ //ctrl+c
 		out(chalk.pink('Cancelling...'))
 		resetPrompt()
 		
@@ -165,16 +177,8 @@ process.stdin.on('keypress', async function (data, key = { name: 'unknown'}) {
 	}else if(key.name === 'backspace'){ //delete
 		if(!shellFocused) return
 		pastMessage = pastMessage.slice(0, -1)
-		await cleanLineAndReRender()
 		
-		const { goal, completed } = getBestAutocompletion(pastMessage)
-		
-		if(goal){
-			promptPrint(green(pastMessage))
-			if(!completed) showRight(pastMessage, goal)
-		}else {
-			promptPrint(chalk.red(pastMessage))
-		}
+		handleCorretions(data)
 	
 	}else if(key.name === 'tab'){ //tab
 		await cleanLineAndReRender()
@@ -199,9 +203,10 @@ async function resetPrompt(){
 
 async function handleCorretions(data){
 	if(!data) return
-	await cleanLineAndReRender()
 	
 	const { goal, completed } = getBestAutocompletion(pastMessage)
+	
+	await cleanLineAndReRender(goal || pastMessage != '' ? 'good' : 'bad')
 	
 	if(goal){
 		promptPrint(green(pastMessage))
@@ -219,13 +224,13 @@ function showRight(data, goal){
 	autoCompletingNow = goal
 }
 
-function cleanLineAndReRender(){
+function cleanLineAndReRender(status){
 	return new Promise( async (res) => {
 		process.stdout.clearLine(0)  // clear current text
 
 		termCursor.up(1)
 
-		const str = await getPrompt()
+		const str = await getPrompt(status)
 		promptPrint(`${str}`);
 		res()
 	})
@@ -241,9 +246,9 @@ process.on('SIGINT', function() {
 	process.exit(0)
 })
 
-const getPrompt = () => {
+const getPrompt = (status = 'good') => {
 	return new Promise(async (res) => {
-		let prompt = await theme.prompt(cwd)
+		let prompt = await theme.prompt(cwd, status)
 		res(prompt)
 	})
 }
@@ -286,7 +291,7 @@ if(process.platform === 'win32'){
 		return path.basename(p)
 	})
 }else{
-	autocompletions = [...process.env.PATH.split(';').map(p => {
+	autocompletions = [...autocompletions, ...process.env.PATH.split(';').map(p => {
 		return path.basename(p)
 	}).filter(Boolean)]
 }

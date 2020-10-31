@@ -3,11 +3,11 @@ import chalkRainbow from 'chalk-rainbow'
 import path from 'path'
 import fs from 'fs'
 
-export async function prompt(pwd) {
+export async function prompt(pwd, status) {
 	if(process.platform === 'win32'){
-		var string = `\n[${chalkRainbow(process.env.USERNAME)}] (${pwd})`;
+		var string = `\n🌞 [${chalkRainbow(process.env.USERNAME)}] (${pwd})`;
 	}else{
-		var string = `\n[${chalkRainbow(process.env.USER)}] (${pwd})`;
+		var string = `\n${status === 'good' ? '😁' : '👿'} [${chalkRainbow(process.env.USER)}] (${pwd})`;
 	}
 
 	const npm = await npmPackage(pwd)
