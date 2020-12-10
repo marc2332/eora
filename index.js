@@ -41,7 +41,7 @@ const executeCommand = async ({ cmd, args}) => {
 			case 'ls':
 				fs.readdir(cwd,(err, list) => {
 					if(err) out(err)
-					out(list.join('\n'))
+					out(list.map(i => ` > ${i}`).join('\n'))
 					res()
 				})
 				break;
@@ -66,7 +66,7 @@ const executeCommand = async ({ cmd, args}) => {
 				res()
 				break;
 			case 'pwd':
-				out(cwd)
+				out(`> ${cwd}`)
 				res()
 				break;
 			case 'exit':
@@ -164,7 +164,7 @@ process.stdin.on('keypress', async function (data, key = { name: 'unknown'}) {
 	}
 	
 	if(key.name === 'c' && key.ctrl){ //ctrl+c
-		out(chalk.pink('Cancelling...'))
+		out(chalk.magenta('Cancelling...'))
 		resetPrompt()
 		
 	}else if(key.name === 'return'){ //enter
